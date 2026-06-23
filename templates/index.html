@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard AirSim PX4</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
+        h1 { color: #06b6d4; text-align: center; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .card { background: #1e293b; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid #334155; }
+        .valor { font-size: 2em; font-weight: bold; color: #ff3366; font-family: monospace; }
+        .chart-container { background: #1e293b; padding: 20px; border-radius: 10px; height: 50vh; }
+    </style>
+</head>
+<body>
+
+    <h1>🚀 PLAN DE VUELO - VUELO A 120m</h1>
+    
+    <div class="grid">
+        <div class="card"><h3>Tiempo (s)</h3><div id="lbl_tiempo" class="valor">0.0</div></div>
+        <div class="card"><h3>Altitud Z (m)</h3><div id="lbl_alt" class="valor">0.00</div></div>
+        <div class="card"><h3>Vel X (m/s)</h3><div id="lbl_vel_x" class="valor">0.00</div></div>
+        <div class="card"><h3>Vel Y (m/s)</h3><div id="lbl_vel_y" class="valor">0.00</div></div>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="graficoAltitud"></canvas>
+    </div>
+
+    <script>
+        // Configuración del gráfico
+        const ctx = document.getElementById('graficoAltitud').getContext('2d');
+        const grafico = new Chart(ctx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Altitud (Z)', borderColor: '#06b6d4', data: [], tension: 0.4 }] },
+            options: { responsive: true, maintainAspectRatio: false, animation: false, scales: { y: { suggestedMin: -130, suggestedMax: 10 } } }
+        });
+
+        // Función que le pide datos a Python cada 500ms
+        setInterval(async () => {
+            try {
+                const respuesta = await fetch('/api/datos');
+                const datos = await respuesta.json();
+
+                // Actualizar números en pantalla
+                document.getElementById('lbl_tiempo').innerText = datos.tiempo;
+                document.getElementById('lbl_alt').innerText = datos.z;
+                document.getElementById('lbl_vel_x').innerText = datos.vel_x;
+                document.getElementById('lbl_vel_y').innerText = datos.vel_y;
+
+                // Actualizar gráfico
+                if(datos.tiempo > 0) {
+                    grafico.data.labels.push(datos.tiempo);
+                    grafico.data.datasets[0].data.push(datos.z);
+                    
+                    // Mantener solo los últimos 30 datos para que no colapse
+                    if(grafico.data.labels.length > 30) {
+                        grafico.data.labels.shift();
+                        grafico.data.datasets[0].data.shift();
+                    }
+                    grafico.update();
+                }
+            } catch (error) { console.error("Esperando a Python..."); }
+        }, 500);
+    </script>
+</body>
+</html>
