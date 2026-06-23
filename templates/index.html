@@ -1,197 +1,272 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GCS - Misión Autónoma</title>
-    <style>
-        /* Estilos de la Estación de Control (Dark Mode Industrial) */
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        
-        h1 { color: #38bdf8; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
-        
-        .dashboard {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 20px;
-            width: 100%;
-            max-width: 1200px;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GCS AirSim - Estación Terrena</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        /* Panel de Estadísticas (Izquierda) */
-        .panel-datos {
-            background-color: #1e293b;
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid #334155;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+<style>
+/* =========================
+   CONFIGURACIÓN GENERAL
+========================= */
+*{ box-sizing:border-box; margin:0; padding:0; font-family:"Segoe UI",sans-serif; }
+/* Ajustado a un máximo de 2300px como solicitaste, para un balance ideal en tu monitor */
+body{ background:#070f1f; color:#f8fafc; padding:15px; width: 96%; max-width: 2300px; margin: 0 auto; }
 
-        .dato-caja {
-            background-color: #0f172a;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #38bdf8;
-        }
+/* =========================
+   HEADER
+========================= */
+header{ text-align:center; margin-bottom:20px; }
+header h1{ color:#38bdf8; font-size:32px; letter-spacing:3px; }
+.subtitulo{ margin-top:8px; color:#94a3b8; font-size:14px; }
+.estado{ margin-top:15px; display:flex; justify-content:center; gap:15px; }
+.badge{ background:#132238; border:1px solid #334155; padding:8px 18px; border-radius:20px; font-size:13px; color:#22c55e; }
 
-        .dato-titulo { font-size: 12px; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px; }
-        .dato-valor { font-size: 24px; font-weight: bold; color: #f1f5f9; font-variant-numeric: tabular-nums; }
-        .unidad { font-size: 14px; color: #64748b; font-weight: normal; }
+/* =========================
+   PANEL TELEMETRIA
+========================= */
+.telemetria{ display:grid; grid-template-columns:repeat(6,1fr); gap:15px; margin-bottom:20px; }
+.card{ background:linear-gradient(145deg,#1e293b,#162033); border:1px solid #334155; border-radius:15px; padding:18px; text-align:center; }
+.icon{ font-size:22px; color:#38bdf8; }
+.titulo{ font-size:12px; color:#94a3b8; margin-top:8px; }
+.valor{ font-size:28px; font-weight:bold; color:#fb7185; margin-top:5px; }
+.unidad{ font-size:13px; color:#cbd5e1; }
 
-        /* Mapa / Radar (Derecha) */
-        .panel-mapa {
-            background-color: #1e293b;
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid #334155;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+/* =========================
+   DASHBOARD PRINCIPAL (GRÁFICOS)
+========================= */
+/* Columna del radar ajustada a 600px para equilibrar con el ancho de 2300px */
+.layout-graficos { display:grid; grid-template-columns: 600px 1fr; gap:20px; margin-bottom: 20px;}
+.panel{ background:#111c31; border:1px solid #334155; border-radius:18px; padding:20px; display:flex; flex-direction:column; align-items:center; width: 100%; }
+.panel h2{ color:#38bdf8; font-size:20px; margin-bottom:20px; letter-spacing:1px; text-align: center; width: 100%;}
 
-        canvas {
-            background-color: #020617;
-            border-radius: 8px;
-            border: 1px solid #38bdf8;
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
-            width: 100%;
-            max-width: 600px;
-            height: 600px;
-        }
-        
-        .leyenda { margin-top: 10px; display: flex; gap: 20px; font-size: 14px; color: #94a3b8; }
-        .punto-leyenda { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 5px; }
-    </style>
+canvas{ background:#020617; border-radius:12px; }
+/* Limita el radar a 600px visuales */
+#radar{ border:1px solid #38bdf8; width: 100%; max-width: 600px; height: auto; aspect-ratio: 1/1; }
+
+.chart-wrapper {
+    position: relative;
+    flex-grow: 1; 
+    min-height: 300px;
+    width: 100%;
+}
+
+/* =========================
+   TERMINAL
+========================= */
+.layout-inferior { width: 100%; }
+.panel-consola { background:#111c31; border:1px solid #334155; border-radius:18px; padding:20px; width: 100%; }
+.panel-consola h2 { color:#38bdf8; font-size:20px; margin-bottom:15px; letter-spacing:1px; text-align: center;}
+
+#consola {
+    background: #020617; 
+    border: 1px solid #1e293b; 
+    border-radius: 8px;
+    height: 250px; 
+    width: 100%; 
+    overflow-y: auto; 
+    padding: 15px;
+    font-family: 'Consolas', 'Courier New', monospace; 
+    font-size: 13px; 
+    color: #a3e635; 
+    line-height: 1.6;
+}
+.t-time { color: #94a3b8; }
+.t-coord { color: #38bdf8; }
+.t-vel { color: #fb7185; }
+
+#consola::-webkit-scrollbar { width: 8px; }
+#consola::-webkit-scrollbar-track { background: #020617; }
+#consola::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+#consola::-webkit-scrollbar-thumb:hover { background: #38bdf8; }
+
+/* =========================
+   FOOTER
+========================= */
+.footer{ margin-top:20px; background:#111c31; border:1px solid #334155; border-radius:15px; padding:15px; display:flex; justify-content:center; gap:40px; color:#38bdf8; }
+
+</style>
 </head>
 <body>
 
-    <h1>Estación de Control Terrestre (GCS)</h1>
+<header>
+    <h1>🚁 ESTACIÓN TERRENA AIRSIM</h1>
+    <div class="subtitulo">MISIÓN AUTÓNOMA | SISTEMA DE TELEMETRÍA EN TIEMPO REAL</div>
+    <div class="estado">
+        <div class="badge">● SIMULACIÓN ACTIVA</div>
+        <div class="badge">● AIRSIM CONECTADO</div>
+        <div class="badge">● TELEMETRÍA ONLINE</div>
+    </div>
+</header>
 
-    <div class="dashboard">
-        <!-- Panel Izquierdo: Telemetría en Vivo -->
-        <div class="panel-datos">
-            <div class="dato-caja">
-                <div class="dato-titulo">Tiempo de Vuelo</div>
-                <div class="dato-valor" id="val-tiempo">0.0 <span class="unidad">s</span></div>
-            </div>
-            <div class="dato-caja">
-                <div class="dato-titulo">Altitud (Z)</div>
-                <!-- AirSim usa Z negativo para la altura, lo mostramos positivo para el usuario -->
-                <div class="dato-valor" id="val-z">0.0 <span class="unidad">m</span></div>
-            </div>
-            <div class="dato-caja">
-                <div class="dato-titulo">Posición X (Norte)</div>
-                <div class="dato-valor" id="val-x">0.0 <span class="unidad">m</span></div>
-            </div>
-            <div class="dato-caja">
-                <div class="dato-titulo">Posición Y (Este)</div>
-                <div class="dato-valor" id="val-y">0.0 <span class="unidad">m</span></div>
-            </div>
-            <div class="dato-caja">
-                <div class="dato-titulo">Velocidad Actual</div>
-                <div class="dato-valor" id="val-vel">0.0 <span class="unidad">m/s</span></div>
-            </div>
-        </div>
+<!-- TELEMETRÍA -->
+<section class="telemetria">
+    <div class="card"><div class="icon">⏱</div><div class="titulo">TIEMPO DE MISIÓN</div><div class="valor" id="tiempo">0</div><div class="unidad">segundos</div></div>
+    <div class="card"><div class="icon">📡</div><div class="titulo">ALTITUD Z</div><div class="valor" id="altitud">0</div><div class="unidad">metros</div></div>
+    <div class="card"><div class="icon">📍</div><div class="titulo">POSICIÓN X</div><div class="valor" id="x">0</div><div class="unidad">metros</div></div>
+    <div class="card"><div class="icon">📍</div><div class="titulo">POSICIÓN Y</div><div class="valor" id="y">0</div><div class="unidad">metros</div></div>
+    <div class="card"><div class="icon">🚀</div><div class="titulo">VELOCIDAD X</div><div class="valor" id="velx">0</div><div class="unidad">m/s</div></div>
+    <div class="card"><div class="icon">🚀</div><div class="titulo">VELOCIDAD Y</div><div class="valor" id="vely">0</div><div class="unidad">m/s</div></div>
+</section>
 
-        <!-- Panel Derecho: Radar en Vivo -->
-        <div class="panel-mapa">
-            <canvas id="radar" width="600" height="600"></canvas>
-            <div class="leyenda">
-                <div><span class="punto-leyenda" style="background: #38bdf8;"></span> Ruta del Dron</div>
-                <div><span class="punto-leyenda" style="background: #f43f5e;"></span> Posición Actual</div>
-            </div>
+<!-- MEDIO: GRÁFICOS JUNTOS -->
+<section class="layout-graficos">
+    <div class="panel">
+        <h2>🛰 RADAR TRAYECTORIA</h2>
+        <!-- Resolución interna aumentada a 800x800 para mayor nitidez al escalar -->
+        <canvas id="radar" width="800" height="800"></canvas>
+    </div>
+    
+    <div class="panel">
+        <h2>📈 PERFIL DE ALTITUD</h2>
+        <div class="chart-wrapper">
+            <canvas id="graficoAltitud"></canvas>
         </div>
     </div>
+</section>
 
-    <script>
-        // Configuración del Radar
-        const canvas = document.getElementById('radar');
-        const ctx = canvas.getContext('2d');
-        const centroX = canvas.width / 2;
-        const centroY = canvas.height / 2;
-        const escala = 1.2; // Escala de metros a píxeles (ajusta según el tamaño de tu ruta)
-        
-        let historialRuta = []; // Aquí guardaremos todos los puntos por donde pasa
+<!-- INFERIOR: CONSOLA / TERMINAL -->
+<section class="layout-inferior">
+    <div class="panel-consola">
+        <h2>💻 CONSOLA DE EVENTOS</h2>
+        <div id="consola">
+            <span class="t-time">[Sistema]</span> Inicializando terminal de telemetría...<br>
+            <span class="t-time">[Sistema]</span> Esperando conexión con el dron...<br>
+        </div>
+    </div>
+</section>
 
-        // Función para dibujar la cuadrícula del radar
-        function dibujarCuadricula() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = '#1e293b';
-            ctx.lineWidth = 1;
+<div class="footer">
+    <span>⚙ MODO: AUTÓNOMO</span>
+    <span>🖥 SIMULADOR: AIRSIM</span>
+    <span>📄 LOG CSV: ACTIVO</span>
+</div>
 
-            // Líneas de la cuadrícula
-            for(let i = 0; i < canvas.width; i += 50) {
-                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
-            }
+<script>
+/* =========================
+      RADAR (Ajustado para 800x800)
+========================= */
+const canvas = document.getElementById("radar");
+const ctx = canvas.getContext("2d");
+const centro = 400; 
+const escala = 1.6; // Escala adaptada a 800px
+let ruta = [];
 
-            // Ejes principales (Cruz central)
-            ctx.strokeStyle = '#334155';
-            ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.moveTo(centroX, 0); ctx.lineTo(centroX, canvas.height); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0, centroY); ctx.lineTo(canvas.width, centroY); ctx.stroke();
-        }
+function dibujarRadar(){
+    ctx.clearRect(0,0,800,800);
+    ctx.strokeStyle="#1e3a5f";
+    ctx.lineWidth=1;
 
-        // Función principal: Pedir datos a Python y dibujar
-        async function actualizarTelemetria() {
-            try {
-                // Pedimos los datos a la ruta /api/datos de Flask
-                const respuesta = await fetch('/api/datos');
-                const datos = await respuesta.json();
+    for(let i=0;i<=800;i+=50){
+        ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,800); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(800,i); ctx.stroke();
+    }
 
-                // 1. Actualizar Textos en el Panel
-                document.getElementById('val-tiempo').innerHTML = datos.tiempo + ' <span class="unidad">s</span>';
-                document.getElementById('val-x').innerHTML = datos.x + ' <span class="unidad">m</span>';
-                document.getElementById('val-y').innerHTML = datos.y + ' <span class="unidad">m</span>';
-                document.getElementById('val-z').innerHTML = Math.abs(datos.z) + ' <span class="unidad">m</span>'; // Altitud en positivo
-                
-                // Calcular velocidad combinada (Pitágoras)
-                const velocidadReal = Math.sqrt(Math.pow(datos.vel_x, 2) + Math.pow(datos.vel_y, 2)).toFixed(1);
-                document.getElementById('val-vel').innerHTML = velocidadReal + ' <span class="unidad">m/s</span>';
+    ctx.strokeStyle="#075985";
+    for(let r=100;r<=350;r+=50){
+        ctx.beginPath(); ctx.arc(centro,centro,r,0,Math.PI*2); ctx.stroke();
+    }
 
-                // 2. Dibujar en el Radar
-                // En AirSim NED: X es Norte (Arriba/Abajo), Y es Este (Izquierda/Derecha)
-                // En Canvas: Y crece hacia abajo. Por lo tanto, restamos el X de AirSim al centro Y del Canvas.
-                const posX_canvas = centroX + (datos.y * escala);
-                const posY_canvas = centroY - (datos.x * escala);
+    ctx.strokeStyle="#38bdf8";
+    ctx.beginPath(); ctx.moveTo(400,0); ctx.lineTo(400,800); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,400); ctx.lineTo(800,400); ctx.stroke();
+}
 
-                // Guardar punto para la línea de la ruta
-                historialRuta.push({ x: posX_canvas, y: posY_canvas });
-
-                // Redibujar todo
-                dibujarCuadricula();
-
-                // Dibujar línea de la ruta
-                if (historialRuta.length > 1) {
-                    ctx.beginPath();
-                    ctx.strokeStyle = '#38bdf8'; // Azul claro
-                    ctx.lineWidth = 3;
-                    ctx.moveTo(historialRuta[0].x, historialRuta[0].y);
-                    for (let i = 1; i < historialRuta.length; i++) {
-                        ctx.lineTo(historialRuta[i].x, historialRuta[i].y);
-                    }
-                    ctx.stroke();
-                }
-
-                // Dibujar el punto actual del dron (Rojo vibrante)
-                ctx.beginPath();
-                ctx.arc(posX_canvas, posY_canvas, 6, 0, Math.PI * 2);
-                ctx.fillStyle = '#f43f5e'; 
-                ctx.fill();
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = '#f43f5e';
-
-            } catch (error) {
-                console.error("Esperando conexión con el dron...", error);
+/* =========================
+      GRAFICO ALTITUD
+========================= */
+const grafico = new Chart(
+    document.getElementById("graficoAltitud"),
+    {
+        type:"line",
+        data:{
+            labels:[],
+            datasets:[{
+                label:"Altitud Z (m)",
+                data:[],
+                borderColor:"#22d3ee",
+                borderWidth:3,
+                tension:.4
+            }]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            animation:false,
+            scales:{
+                y:{ suggestedMin:-130, suggestedMax:10 }
             }
         }
+    }
+);
 
-        // Ejecutar la actualización cada 500 milisegundos (0.5 segundos)
-        setInterval(actualizarTelemetria, 500);
-        dibujarCuadricula(); // Dibujar el fondo vacío al cargar
-    </script>
+/* =========================
+      ACTUALIZAR DATOS
+========================= */
+const terminal = document.getElementById("consola");
+
+async function actualizar(){
+    try{
+        const respuesta = await fetch("/api/datos");
+        const datos = await respuesta.json();
+
+        // 1. Tarjetas numéricas
+        document.getElementById("tiempo").innerHTML = datos.tiempo;
+        document.getElementById("altitud").innerHTML = Math.abs(datos.z);
+        document.getElementById("x").innerHTML = datos.x;
+        document.getElementById("y").innerHTML = datos.y;
+        document.getElementById("velx").innerHTML = datos.vel_x;
+        document.getElementById("vely").innerHTML = datos.vel_y;
+
+        // 2. Radar
+        let px = centro + datos.y*escala;
+        let py = centro - datos.x*escala;
+
+        ruta.push({ x:px, y:py });
+        dibujarRadar();
+
+        if(ruta.length>1){
+            ctx.beginPath();
+            ctx.strokeStyle="#facc15";
+            ctx.lineWidth=4; 
+            ctx.moveTo(ruta[0].x, ruta[0].y);
+            ruta.forEach(p => { ctx.lineTo(p.x, p.y); });
+            ctx.stroke();
+        }
+
+        ctx.beginPath();
+        ctx.fillStyle="#ef4444";
+        ctx.arc(px, py, 9, 0, Math.PI*2); 
+        ctx.fill();
+
+        // 3. Gráfico Altitud
+        if(datos.tiempo > 0) {
+            grafico.data.labels.push(datos.tiempo);
+            grafico.data.datasets[0].data.push(datos.z);
+
+            if(grafico.data.labels.length>40){
+                grafico.data.labels.shift();
+                grafico.data.datasets[0].data.shift();
+            }
+            grafico.update();
+            
+            // 4. Terminal Auto-scroll
+            const linea = `> <span class="t-time">[En Vivo] Seg: ${datos.tiempo}</span> | <span class="t-coord">X: ${datos.x}m Y: ${datos.y}m Alt: ${datos.z}m</span> | <span class="t-vel">VelX: ${datos.vel_x} VelY: ${datos.vel_y}</span><br>`;
+            terminal.innerHTML += linea;
+            
+            // Fuerza la barra de desplazamiento hacia el final para ver siempre el dato más reciente
+            terminal.scrollTop = terminal.scrollHeight; 
+        }
+    }
+    catch(error){
+        console.log("Esperando conexión AirSim...");
+    }
+}
+
+setInterval(actualizar, 500);
+dibujarRadar();
+
+</script>
 </body>
 </html>
