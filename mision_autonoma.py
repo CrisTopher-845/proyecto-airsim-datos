@@ -105,3 +105,4 @@ if __name__ == '__main__':
     threading.Thread(target=registrar_datos, daemon=True).start()
     threading.Thread(target=ejecutar_vuelo, daemon=True).start()
     app.run(port=5000)
+    
