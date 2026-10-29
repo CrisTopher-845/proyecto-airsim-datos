@@ -1,0 +1,19 @@
+{
+  "SettingsVersion": 1.2,
+  "SimMode": "Multirotor",
+  "OriginGeopoint": {
+    "Latitude": -33.467225,
+    "Longitude": -70.657605,
+    "Altitude": 500
+  },
+  "Vehicles": {
+    "ArduCopter": {
+      "VehicleType": "ArduCopter",
+      "UseSerial": false,
+      "LocalHostIp": "0.0.0.0",
+      "UdpIp": "127.0.0.1",
+      "UdpPort": 9003,
+      "ControlPort": 9002
+    }
+  }
+}

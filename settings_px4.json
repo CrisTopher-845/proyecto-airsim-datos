@@ -1,0 +1,23 @@
+{
+  "SettingsVersion": 1.2,
+  "SimMode": "Multirotor",
+  "OriginGeopoint": {
+    "Latitude": -33.467225,
+    "Longitude": -70.657605,
+    "Altitude": 500
+  },
+  "Vehicles": {
+    "PX4": {
+      "VehicleType": "PX4Multirotor",
+      "UseSerial": false,
+      "LockStep": true,
+      "UseTcp": true,
+      "TcpPort": 4560,
+      "ControlPort": 14320,
+      "LocalHostIp": "127.0.0.1",
+      "X": 0,
+      "Y": 0,
+      "Z": -2.5
+    }
+  }
+}

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Manual de Operación</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 40px auto;
+            max-width: 800px;
+            color: #333;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        h1 {
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 10px;
+        }
+        h2 {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: Consolas, monospace;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+        ul, ol {
+            margin-bottom: 20px;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Manual de Operación: Entorno de Simulación Autónoma Avanzado (AirSim + PX4 / ArduPilot)</h1>
+
+<h2>1. Visión General del Sistema</h2>
+<p>Este entorno es un <strong>"Gemelo Digital"</strong> totalmente automatizado compuesto por cuatro bloques principales que trabajan en perfecta sincronía. A diferencia de versiones anteriores, este sistema cuenta con un <strong>Orquestador</strong> que arranca y vincula todos los procesos de forma autónoma:</p>
+<ul>
+    <li><strong>Unreal Engine 5 + AirSim (El Mundo):</strong> Renderiza la física hiperrealista, el clima y el modelo 3D del dron.</li>
+    <li><strong>SITL en Ubuntu (El Cerebro):</strong> El software de control de vuelo (PX4 o ArduPilot) que calcula la física y dinámica de vuelo.</li>
+    <li><strong>Script de Python (El Comandante):</strong> Orquesta la misión, envía las coordenadas de vuelo, atrapa señales de emergencia y recolecta telemetría.</li>
+    <li><strong>Dashboard Web + QGroundControl (La Estación Terrena):</strong> Interfaces para monitorear la ruta en tiempo real. Ahora se abren automáticamente al iniciar la simulación.</li>
+</ul>
+
+<h2>2. Estructura de Archivos y Carpetas</h2>
+<p>Todos los archivos del proyecto deben estar ubicados en la carpeta principal:<br>
+<code>c:\Users\matias.hinrichsen\Desktop\cris.AirSim\proyecto-airsim-datos\</code></p>
+
+<h3>Archivos Principales</h3>
+<ol>
+    <li><strong><code>launcher.py</code> (NUEVO):</strong><br>
+        <em>Ruta:</em> <code>c:\Users\matias.hinrichsen\Desktop\cris.AirSim\proyecto-airsim-datos\launcher.py</code><br>
+        El <strong>Orquestador Automático</strong>. Es el único archivo que el operador necesita ejecutar. Se encarga de abrir Unreal, inyectar configuraciones, lanzar el SITL, abrir QGroundControl, el Dashboard y la misión.
+    </li>
+    <li><strong><code>mision_autonoma.py</code>:</strong><br>
+        <em>Ruta:</em> <code>c:\Users\matias.hinrichsen\Desktop\cris.AirSim\proyecto-airsim-datos\mision_autonoma.py</code><br>
+        Script de misión exclusivo para <strong>PX4</strong>. Arranca el servidor web en el puerto <code>5001</code>.
+    </li>
+    <li><strong><code>mision_ardupilot.py</code>:</strong><br>
+        <em>Ruta:</em> <code>c:\Users\matias.hinrichsen\Desktop\cris.AirSim\proyecto-airsim-datos\mision_ardupilot.py</code><br>
+        Script de misión exclusivo para <strong>ArduPilot</strong>. Arranca el servidor web en el puerto <code>5000</code>.
+    </li>
+    <li><strong><code>start_px4.sh</code> / <code>start_ardupilot.sh</code>:</strong><br>
+        <em>Rutas:</em> <code>...\start_px4.sh</code> / <code>...\start_ardupilot.sh</code><br>
+        Scripts de shell nativos de Linux invocados por el orquestador para encender los "Cerebros" SITL.
+    </li>
+    <li><strong><code>mision_mapeo_final.csv</code> / <code>mision_mapeo_ardupilot.csv</code>:</strong><br>
+        <em>Rutas:</em> <code>...\mision_mapeo_final.csv</code> / <code>...\mision_mapeo_ardupilot.csv</code><br>
+        Archivos autogenerados donde se guarda la telemetría histórica tras cada vuelo.
+    </li>
+</ol>
+
+<h3>Carpetas</h3>
+<ul>
+    <li><strong><code>templates/</code>:</strong><br>
+        <em>Ruta:</em> <code>c:\Users\matias.hinrichsen\Desktop\cris.AirSim\proyecto-airsim-datos\templates\</code><br>
+        Contiene el diseño visual del Dashboard (<code>index.html</code>).
+    </li>
+</ul>
+
+<h2>3. El Archivo Maestro de Configuración (<code>settings.json</code>)</h2>
+<p>El Orquestador gestiona esto por ti, inyectando automáticamente la plantilla correspondiente (<code>settings_px4.json</code> o <code>settings_ardupilot.json</code>) hacia la carpeta de Windows (<code>Documentos\AirSim\settings.json</code>).</p>
+<ul>
+    <li>Define que el vehículo es un multirotor.</li>
+    <li>Habilita las IPs y puertos necesarios (Ej: UDP 14540 para PX4, o TCP 5760/5762 para ArduPilot).</li>
+</ul>
+
+<h2>4. Secuencia de Encendido (Automatizada)</h2>
+<p>Gracias a la nueva arquitectura, la secuencia de encendido manual ha quedado obsoleta. El nuevo procedimiento de vuelo consta de <strong>un solo paso</strong>:</p>
+
+<h3>Paso Único: Lanzar el Orquestador</h3>
+<ol>
+    <li>Abre tu terminal de <strong>Ubuntu (WSL)</strong>.</li>
+    <li>Navega a la carpeta del proyecto:
+<pre><code>cd /mnt/c/Users/matias.hinrichsen/Desktop/cris.AirSim/proyecto-airsim-datos</code></pre>
+    </li>
+    <li>Ejecuta el launcher:
+<pre><code>python3 launcher.py</code></pre>
+    </li>
+    <li>El sistema mostrará un menú. <strong>Ingresa 1 para PX4 o 2 para ArduPilot.</strong></li>
+</ol>
+
+<p>A partir de este momento, puedes soltar el teclado. <strong>El sistema realizará todo el proceso de forma automática, con una única excepción:</strong> si eliges ArduPilot, la conexión en QGroundControl deberá hacerse de forma manual (como se ha configurado por diseño).</p>
+
+<p>El Orquestador hará lo siguiente:</p>
+<ul>
+    <li>Copiará el <code>settings.json</code> correcto.</li>
+    <li>Abrirá <strong>Unreal Engine 5</strong>. <em>(Nota: Unreal Engine se congelará intencionalmente a la espera de la conexión del cerebro).</em></li>
+    <li>Lanzará una terminal secundaria en Ubuntu iniciando el firmware <strong>SITL</strong> correspondiente. <em>(Al completarse, Unreal Engine se descongelará).</em></li>
+    <li>Abrirá <strong>QGroundControl</strong>. <em>(Recuerda: Si elegiste ArduPilot, aquí debes realizar tu conexión manual TCP en el puerto 5763).</em></li>
+    <li>Ejecutará el script de misión, abrirá automáticamente tu <strong>Navegador Web</strong> con el Dashboard, y el dron despegará (hasta 115m de altura).</li>
+</ul>
+
+<h2>5. Protocolo de Emergencia (Abortar Misión)</h2>
+<p>El sistema cuenta con un interceptor de señales de sistema (SIGINT) a prueba de fallos. Si necesitas abortar el vuelo antes de que termine su ruta programada:</p>
+<ol>
+    <li>Haz clic en la <strong>consola negra que muestra los datos de telemetría</strong> (<code>[TELEMETRY] T: 45.2s...</code>).</li>
+    <li>Presiona <code>Ctrl + C</code>.</li>
+    <li>Verás el mensaje rojo <code>[SYSTEM][EMERGENCIA] Comando RTL enviado al vehículo.</code>.</li>
+    <li>El dron abandonará la misión inmediatamente, dará media vuelta y aterrizará a salvo en el punto de inicio (Return To Launch). El servidor web se apagará de forma segura.</li>
+</ol>
+
+<h2>6. Interpretación de la Telemetría (Dashboard Web)</h2>
+<ul>
+    <li><strong>Valores X, Y, Z:</strong> Indican la posición actual del dron. Un valor <code>Z = -115</code> indica que el dron ha alcanzado la altura de crucero.</li>
+    <li><strong>Velocidades (Vel_X, Vel_Y):</strong> Si permanecen en 0.0 mientras el dron está en el aire y no ha terminado la ruta, el dron está pausado o rechazando coordenadas.</li>
+</ul>
+
+<h2>7. Matriz de Resolución de Problemas (Troubleshooting)</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Síntoma</th>
+            <th>Causa Probable</th>
+            <th>Acción Correctiva</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Consola del SITL se cierra inmediatamente o tira error <code>command not found</code></strong></td>
+            <td>Problemas cargando el <code>PATH</code> o el <code>.bashrc</code> en la sub-terminal no-interactiva de Ubuntu.</td>
+            <td>El orquestador ya usa rutas absolutas y carga el PATH directamente en el <code>.sh</code> para evitarlo. Si ocurre, verificar las rutas internas del archivo <code>start_px4.sh</code> o <code>start_ardupilot.sh</code>.</td>
+        </tr>
+        <tr>
+            <td><strong>QGroundControl muestra <code>Unsupported main mode</code></strong></td>
+            <td>ArduPilot/PX4 no recibió suficientes coordenadas de seguridad antes del armado.</td>
+            <td>Ignorar si es temporal. El script reintentará armar automáticamente hasta tener posición.</td>
+        </tr>
+        <tr>
+            <td><strong>Unreal Engine se queda "congelado" permanentemente</strong></td>
+            <td>El firmware SITL (PX4/ArduPilot) falló al arrancar y no pudo conectarse con Unreal Engine.</td>
+            <td>Revisa la terminal negra del SITL. Si falló, ciérrala y usa <code>wsl --shutdown</code> en PowerShell para limpiar procesos colgados.</td>
+        </tr>
+        <tr>
+            <td><strong>El dron no arma y la consola dice "Armado rechazado" repetidas veces</strong></td>
+            <td>El filtro EKF de ArduPilot/PX4 aún no ha establecido un origen GPS válido.</td>
+            <td><strong>Esperar.</strong> Es un mecanismo de seguridad vital. Tomará entre 15 y 30 segundos. El script es paciente y armará solo cuando sea seguro.</td>
+        </tr>
+        <tr>
+            <td><strong>El navegador no se abre automáticamente</strong></td>
+            <td>El interceptor de comandos de WSL hacia Windows falló.</td>
+            <td>Abre el navegador manualmente. <strong>PX4:</strong> <code>http://127.0.0.1:5001</code> | <strong>ArduPilot:</strong> <code>http://127.0.0.1:5000</code>.</td>
+        </tr>
+        <tr>
+            <td><strong>Se requiere limpiar el sistema entre simulaciones</strong></td>
+            <td>Puertos bloqueados por ejecuciones anteriores.</td>
+            <td>En PowerShell, ejecuta: <code>wsl --shutdown</code>. Luego cierra QGC y Unreal Engine y vuelve a empezar.</td>
+        </tr>
+    </tbody>
+</table>
+
+<p><em>Manual generado para la arquitectura automatizada v2.0.</em></p>
+
+</body>
+</html>
