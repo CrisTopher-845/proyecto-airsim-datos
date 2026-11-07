@@ -65,13 +65,13 @@ def main():
         "Silenciar poll timeout en SimulatorMavlink.cpp"
     )
 
-    # 3. Comentar px4-rc.mavlink en rcS si existe
+    # 3. Asegurar que px4-rc.mavlink esté activo en rcS para MAVLink/Telemetría/Offboard
     rcs_file = os.path.join(px4_dir, "ROMFS/px4fmu_common/init.d-posix/rcS")
     patch_regex(
         rcs_file,
-        r'^\. px4-rc\.mavlink',
-        r'# . px4-rc.mavlink',
-        "Desactivar . px4-rc.mavlink en rcS"
+        r'^#\s*\.\s*px4-rc\.mavlink',
+        r'. px4-rc.mavlink',
+        "Activar . px4-rc.mavlink en rcS"
     )
 
     # 4. Actualizar sensor RPLIDAR si existe
