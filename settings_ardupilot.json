@@ -1,0 +1,41 @@
+{
+  "SettingsVersion": 1.2,
+  "SimMode": "Multirotor",
+  "OriginGeopoint": {
+    "Latitude": -33.467225,
+    "Longitude": -70.657605,
+    "Altitude": 500
+  },
+  "Vehicles": {
+    "ArduCopter": {
+      "VehicleType": "ArduCopter",
+      "UseSerial": false,
+      "LocalHostIp": "0.0.0.0",
+      "UdpIp": "127.0.0.1",
+      "UdpPort": 9003,
+      "ControlPort": 9002,
+      "Sensors": {
+        "Lidar1": {
+          "SensorType": 6,
+          "Enabled": true,
+          "NumberOfChannels": 32,
+          "RotationsPerSecond": 10,
+          "PointsPerSecond": 200000,
+          "X": 0,
+          "Y": 0,
+          "Z": -0.5,
+          "Roll": 0,
+          "Pitch": 0,
+          "Yaw": 0,
+          "VerticalFOVUpper": 15.0,
+          "VerticalFOVLower": -45.0,
+          "HorizontalFOVStart": -180,
+          "HorizontalFOVEnd": 180,
+          "DrawDebugPoints": false,
+          "DataFrame": "SensorLocalFrame",
+          "Range": 100.0
+        }
+      }
+    }
+  }
+}

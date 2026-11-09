@@ -229,23 +229,24 @@ let historial = { tiempo: [], z: [], x: [], y: [], vel_x: [], vel_y: [] };
 /* =========================
       MAPA GEOESPACIAL (LEAFLET)
 ========================= */
-// Origen GPS simulado (Puedes cambiarlo a cualquier latitud/longitud del mundo)
-// Por defecto: Coordenadas del campus de Microsoft en Redmond (Escenario típico de AirSim)
-const ORIGEN_LAT = 47.641468;
-const ORIGEN_LON = -122.140165;
+// Origen GPS simulado (Ajustado a UBO, Santiago de Chile)
+// IMPORTANTE: Asegúrate de que tus archivos en static/tiles coincidan con estas coordenadas
+const ORIGEN_LAT = -33.467225;
+const ORIGEN_LON = -70.657605;
 
 // Inicializar el mapa
-const mapa = L.map('mapa-container', { zoomControl: false }).setView([ORIGEN_LAT, ORIGEN_LON], 18);
+const mapa = L.map('mapa-container', { zoomControl: false }).setView([ORIGEN_LAT, ORIGEN_LON], 17);
 
-// Cargar la capa de OpenStreetMap
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+// Cargar la capa de mapas locales (OFFLINE)
+// Busca en la carpeta static/tiles/ los archivos descargados
+L.tileLayer('/static/tiles/{z}/{x}/{y}.png', {
     maxZoom: 20,
-    attribution: '© OpenStreetMap'
+    attribution: '© Offline Local Maps'
 }).addTo(mapa);
 
 // Crear el marcador del dron y la línea de ruta GPS
 const markerDron = L.circleMarker([ORIGEN_LAT, ORIGEN_LON], { color: '#ef4444', radius: 6, fillOpacity: 1 }).addTo(mapa);
-const rutaGPS = L.polyline([], { color: '#facc15', weight: 4 }).addTo(mapa);
+const rutaGPS = L.polyline([], { color: 'black', weight: 4 }).addTo(mapa);
 
 // Función para convertir metros (NED) a Lat/Lon reales
 function metrosAGps(metrosX, metrosY) {
